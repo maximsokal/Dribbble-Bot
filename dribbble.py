@@ -1,7 +1,16 @@
 import requests, re, time, json, os
 from bs4 import BeautifulSoup
 
+scriptDirectory = os.path.abspath(os.path.dirname(__file__))
 userSession = requests.Session()
+
+pendingFileName = 'pendingUsers.txt'
+acceptedFileName = 'acceptedUsers.txt'
+ignoredFileName = 'ignoredUsers.txt'
+
+pendingFilePath = scriptDirectory + '/' + pendingFileName
+acceptedFilePath = scriptDirectory + '/' + acceptedFileName
+ignoredFilePath = scriptDirectory + '/' + ignoredFileName
 
 login_params = {
 	'utf8': '\u2713',
@@ -25,15 +34,16 @@ acceptedFollowList = []
 ignoredFollowList = []
 
 def retrieveLists():
+	global pendingFilePath, acceptedFilePath, ignoredFilePath
 	global pendingFollowList, acceptedFollowList, ignoredFollowList
-	if os.path.exists('pendingUsers.txt'):
-		with open('pendingUsers.txt', 'r') as f:
+	if os.path.exists(pendingFilePath):
+		with open(pendingFilePath, 'r') as f:
 			pendingFollowList = json.loads(f.read())
-	if os.path.exists('acceptedUsers.txt'):
-		with open('acceptedUsers.txt', 'r') as f:
+	if os.path.exists(acceptedFilePath):
+		with open(acceptedFilePath, 'r') as f:
 			acceptedFollowList = json.loads(f.read())
-	if os.path.exists('ignoredUsers.txt'):
-		with open('ignoredUsers.txt', 'r') as f:
+	if os.path.exists(ignoredFilePath):
+		with open(ignoredFilePath, 'r') as f:
 			ignoredFollowList = json.loads(f.read())
 
 def isUserPending(targetUserName):
@@ -91,21 +101,21 @@ def followUser(targetUserName):
 	time.sleep(1)
 
 def addUserToPendingList(targetUserName):
-	global pendingFollowList
+	global pendingFollowList, pendingFilePath
 	pendingFollowList.append({'name': targetUserName, 'time_followed': time.time()})
-	with open('pendingUsers.txt', 'w') as f:
+	with open(pendingFilePath, 'w') as f:
 		f.write(json.dumps(pendingFollowList))
 
 def addUserToAcceptedList(targetUserName):
-	global acceptedFollowList
+	global acceptedFollowList, acceptedFilePath
 	acceptedFollowList.append({'name': targetUserName, 'time_followed': time.time()})
-	with open('acceptedUsers.txt', 'w') as f:
+	with open(acceptedFilePath, 'w') as f:
 		f.write(json.dumps(acceptedFollowList))
 
 def addUserToIgnoredList(targetUserName):
-	global ignoredFollowList
+	global ignoredFollowList, ignoredFilePath
 	ignoredFollowList.append({'name': targetUserName, 'time_followed': time.time()})
-	with open('ignoredUsers.txt', 'w') as f:
+	with open(ignoredFilePath, 'w') as f:
 		f.write(json.dumps(ignoredFollowList))
 
 def unfollowUser(targetUserName):
@@ -134,30 +144,30 @@ def unfollowUser(targetUserName):
 	time.sleep(1)
 
 def removeUserFromPendingList(targetUserName):
-	global pendingFollowList
+	global pendingFollowList, pendingFilePath
 	for i, v in enumerate(list(pendingFollowList)):
 		if v['name'] == targetUserName:
 			pendingFollowList.remove(v)
 			break
-	with open('pendingUsers.txt', 'w') as f:
+	with open(pendingFilePath, 'w') as f:
 		f.write(json.dumps(pendingFollowList))
 
 def removeUserFromAcceptedList(targetUserName):
-	global acceptedFollowList
+	global acceptedFollowList, acceptedFilePath
 	for i, v in enumerate(list(acceptedFollowList)):
 		if v['name'] == targetUserName:
 			acceptedFollowList.remove(v)
 			break
-	with open('acceptedUsers.txt', 'w') as f:
+	with open(acceptedFilePath, 'w') as f:
 		f.write(json.dumps(acceptedFollowList))
 
 def removeUserFromIgnoredList(targetUserName):
-	global ignoredFollowList
+	global ignoredFollowList, ignoredFilePath
 	for i, v in enumerate(list(ignoredFollowList)):
 		if v['name'] == targetUserName:
 			ignoredFollowList.remove(v)
 			break
-	with open('ignoredUsers.txt', 'w') as f:
+	with open(ignoredFilePath, 'w') as f:
 		f.write(json.dumps(ignoredFollowList))
 
 # Retrieving the list of currently pending followed users by the bot.
@@ -167,16 +177,16 @@ retrieveLists()
 # Time to remove anyone in any list for more than a week.
 
 currentTime = time.time()
-for i, v in enumerate(list(acceptedFollowList)):
+for i, v in enumerate(list(acceptedFollowLFilePathist)):
 	if currentTime - v['time_followed'] > 604800:
 		acceptedFollowList.remove(v)
-		with open('acceptedUsers.txt', 'w') as f:
+		with open(acceptedFilePath, 'w') as f:
 			f.write(json.dumps(acceptedFollowList))
 
 for i, v in enumerate(list(ignoredFollowList)):
 	if currentTime - v['time_followed'] > 604800:
 		ignoredFollowList.remove(v)
-		with open('ignoredUsers.txt', 'w') as f:
+		with open(ignoredFilePath, 'w') as f:
 			f.write(json.dumps(ignoredFollowList))
 
 # This is used in order to obtain the authenticity token required for logging in.
